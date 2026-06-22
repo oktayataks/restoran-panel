@@ -41,10 +41,8 @@ const NewOrder = () => {
         deliveryAddress: form.deliveryAddress,
         orderTotal: parseFloat(form.orderTotal),
         deliveryFee: parseFloat(form.deliveryFee || '0'),
-        paymentMethod: form.paymentMethod,
         notes: form.notes ? `[${form.source}] ${form.notes}` : `[${form.source}]`,
         restaurantId: myRestaurant.id,
-        status: 'pending',
       });
 
       navigate('/orders');
