@@ -10,7 +10,7 @@ const statusMap: Record<string, { label: string; color: string }> = {
 };
 
 const Orders = () => {
-  const { data: orders = [], isLoading } = useQuery({
+  const { data: ordersData, isLoading } = useQuery({
     queryKey: ['restaurant-orders'],
     queryFn: async () => {
       const res = await api.get('/orders');
@@ -18,6 +18,10 @@ const Orders = () => {
     },
     refetchInterval: 30000,
   });
+
+  const orders = Array.isArray(ordersData)
+    ? ordersData
+    : ordersData?.data || ordersData?.orders || [];
 
   if (isLoading) return (
     <div className="flex items-center justify-center h-64">

@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 const Dashboard = () => {
   const navigate = useNavigate();
 
-  const { data: orders = [] } = useQuery({
+  const { data: ordersData } = useQuery({
     queryKey: ['restaurant-orders'],
     queryFn: async () => {
       const res = await api.get('/orders');
@@ -13,6 +13,10 @@ const Dashboard = () => {
     },
     refetchInterval: 30000,
   });
+
+  const orders = Array.isArray(ordersData)
+    ? ordersData
+    : ordersData?.data || ordersData?.orders || [];
 
   const today = new Date().toDateString();
   const todayOrders = orders.filter((o: any) =>
