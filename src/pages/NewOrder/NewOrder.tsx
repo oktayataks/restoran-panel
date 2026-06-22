@@ -20,15 +20,37 @@ const NewOrder = () => {
     e.preventDefault();
     setLoading(true);
     try {
+      const restaurantRes = await api.get('/restaurants');
+      const restaurants = Array.isArray(restaurantRes.data)
+        ? restaurantRes.data
+        : restaurantRes.data?.data || [];
+
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const myRestaurant = restaurants.find(
+        (r: any) => r.userId === user.id
+      );
+
+      if (!myRestaurant) {
+        alert('Restoran bilgisi bulunamadı! Admin ile iletişime geçin.');
+        return;
+      }
+
       await api.post('/orders', {
-        ...form,
+        customerName: form.customerName,
+        customerPhone: form.customerPhone,
+        deliveryAddress: form.deliveryAddress,
         orderTotal: parseFloat(form.orderTotal),
         deliveryFee: parseFloat(form.deliveryFee || '0'),
+        paymentMethod: form.paymentMethod,
+        notes: form.notes ? `[${form.source}] ${form.notes}` : `[${form.source}]`,
+        restaurantId: myRestaurant.id,
         status: 'pending',
       });
+
       navigate('/orders');
-    } catch {
-      alert('Sipariş oluşturulamadı!');
+    } catch (err: any) {
+      console.error('Hata:', err.response?.data || err);
+      alert('Sipariş oluşturulamadı: ' + (err.response?.data?.message || err.message));
     } finally {
       setLoading(false);
     }
