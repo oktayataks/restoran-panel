@@ -90,7 +90,6 @@ const Dashboard = () => {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Restoran Bilgi Kartı */}
       <div className="bg-gradient-to-br from-orange-500 to-red-500 text-white rounded-3xl p-6 shadow-lg">
         <div className="flex items-start justify-between">
           <div className="flex-1">
@@ -100,8 +99,8 @@ const Dashboard = () => {
                 <h1 className="text-2xl font-bold">{myRestaurant.name}</h1>
                 <div className="flex items-center gap-2 mt-1">
                   <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                    myRestaurant.isActive
-                      ? 'bg-green-400 text-green-900'
+                    myRestaurant.isActive 
+                      ? 'bg-green-400 text-green-900' 
                       : 'bg-red-400 text-red-900'
                   }`}>
                     {myRestaurant.isActive ? '● Aktif' : '● Pasif'}
@@ -126,7 +125,6 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* İstatistik Kartları */}
       <div>
         <h2 className="text-lg font-bold text-gray-800 mb-3">Bugünkü Özet</h2>
         <div className="grid grid-cols-3 gap-3">
@@ -163,7 +161,6 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Sipariş Kaynakları */}
       <div className="bg-white border rounded-2xl p-5">
         <h2 className="text-lg font-bold text-gray-800 mb-4">
           Sipariş Kaynakları (Bugün)
@@ -176,7 +173,6 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Saatlik Grafik */}
       <div className="bg-white border rounded-2xl p-5">
         <h2 className="text-lg font-bold text-gray-800 mb-4">
           Son 12 Saat
@@ -184,7 +180,7 @@ const Dashboard = () => {
         <div className="flex items-end gap-1 h-32">
           {hourlyData.map((count, i) => (
             <div key={i} className="flex-1 flex flex-col items-center justify-end gap-1">
-              <div
+              <div 
                 className="w-full bg-gradient-to-t from-orange-400 to-orange-300 rounded-t-lg transition-all"
                 style={{ height: `${(count / maxHourly) * 100}%`, minHeight: count > 0 ? '8px' : '2px' }}
                 title={`${count} sipariş`}
@@ -197,7 +193,6 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Yeni Sipariş Butonu */}
       <button
         onClick={() => navigate('/new-order')}
         className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold py-4 rounded-2xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 text-lg"
@@ -206,7 +201,6 @@ const Dashboard = () => {
         <span>Yeni Sipariş Oluştur</span>
       </button>
 
-      {/* Aktif Siparişler */}
       {activeOrders.length > 0 && (
         <div>
           <h2 className="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
@@ -229,8 +223,8 @@ const Dashboard = () => {
                     ₺{parseFloat(order.orderTotal || 0).toFixed(0)}
                   </p>
                   <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                    order.status === 'assigned'
-                      ? 'bg-blue-100 text-blue-700'
+                    order.status === 'assigned' 
+                      ? 'bg-blue-100 text-blue-700' 
                       : 'bg-purple-100 text-purple-700'
                   }`}>
                     {order.status === 'assigned' ? '📦 Atandı' : '🛵 Yolda'}
@@ -242,7 +236,6 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Bekleyen Siparişler */}
       {pendingOrders.length > 0 && (
         <div>
           <h2 className="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
@@ -267,13 +260,7 @@ const Dashboard = () => {
   );
 };
 
-const SourceBar = ({ label, icon, count, total, color }: {
-  label: string;
-  icon: string;
-  count: number;
-  total: number;
-  color: string;
-}) => {
+const SourceBar = ({ label, icon, count, total, color }: any) => {
   const percent = total > 0 ? (count / total) * 100 : 0;
   return (
     <div>
@@ -281,10 +268,12 @@ const SourceBar = ({ label, icon, count, total, color }: {
         <span className="text-sm font-medium text-gray-700">
           {icon} {label}
         </span>
-        <span className="text-sm font-bold text-gray-800">{count}</span>
+        <span className="text-sm font-bold text-gray-800">
+          {count}
+        </span>
       </div>
       <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
-        <div
+        <div 
           className={`${color} h-full rounded-full transition-all`}
           style={{ width: `${percent}%` }}
         />
