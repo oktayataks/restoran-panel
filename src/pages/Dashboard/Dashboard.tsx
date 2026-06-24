@@ -197,7 +197,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Hızlı İşlem */}
+      {/* Yeni Sipariş Butonu */}
       <button
         onClick={() => navigate('/new-order')}
         className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white font-bold py-4 rounded-2xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 text-lg"
