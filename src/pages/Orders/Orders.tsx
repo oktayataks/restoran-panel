@@ -10,18 +10,34 @@ const statusMap: Record<string, { label: string; color: string }> = {
 };
 
 const Orders = () => {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+  const { data: restaurants = [] } = useQuery({
+    queryKey: ['my-restaurants'],
+    queryFn: async () => {
+      const res = await api.get('/restaurants');
+      return Array.isArray(res.data)
+        ? res.data
+        : res.data?.data || [];
+    },
+  });
+
+  const myRestaurant = restaurants.find((r: any) => r.userId === user.id);
+
   const { data: ordersData, isLoading } = useQuery({
     queryKey: ['restaurant-orders'],
     queryFn: async () => {
       const res = await api.get('/orders');
-      return res.data;
+      return Array.isArray(res.data)
+        ? res.data
+        : res.data?.data || res.data?.orders || [];
     },
     refetchInterval: 30000,
   });
 
-  const orders = Array.isArray(ordersData)
-    ? ordersData
-    : ordersData?.data || ordersData?.orders || [];
+  const orders = myRestaurant
+    ? (ordersData ?? []).filter((o: any) => o.restaurantId === myRestaurant.id)
+    : [];
 
   if (isLoading) return (
     <div className="flex items-center justify-center h-64">

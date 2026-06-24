@@ -4,19 +4,36 @@ import { useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
 
-  const { data: ordersData } = useQuery({
+  const { data: restaurants = [] } = useQuery({
+    queryKey: ['my-restaurants'],
+    queryFn: async () => {
+      const res = await api.get('/restaurants');
+      return Array.isArray(res.data)
+        ? res.data
+        : res.data?.data || [];
+    },
+  });
+
+  const myRestaurant = restaurants.find(
+    (r: any) => r.userId === user.id
+  );
+
+  const { data: ordersData = [] } = useQuery({
     queryKey: ['restaurant-orders'],
     queryFn: async () => {
       const res = await api.get('/orders');
-      return res.data;
+      return Array.isArray(res.data)
+        ? res.data
+        : res.data?.data || [];
     },
     refetchInterval: 30000,
   });
 
-  const orders = Array.isArray(ordersData)
-    ? ordersData
-    : ordersData?.data || ordersData?.orders || [];
+  const orders = myRestaurant
+    ? ordersData.filter((o: any) => o.restaurantId === myRestaurant.id)
+    : [];
 
   const today = new Date().toDateString();
   const todayOrders = orders.filter((o: any) =>
@@ -29,50 +46,95 @@ const Dashboard = () => {
     o.status === 'delivered'
   );
 
+  if (!myRestaurant) {
+    return (
+      <div className="p-6">
+        <div className="bg-yellow-50 border border-yellow-200
+          rounded-2xl p-6 text-center">
+          <p className="text-4xl mb-3">⚠️</p>
+          <h2 className="text-xl font-bold text-yellow-800 mb-2">
+            Restoran Kaydı Bulunamadı
+          </h2>
+          <p className="text-yellow-700">
+            Hesabınız henüz bir restorana bağlanmamış.<br/>
+            Lütfen sistem yöneticisi ile iletişime geçin.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 space-y-6">
+      <div className="bg-orange-500 text-white rounded-2xl p-6">
+        <p className="text-orange-100 text-sm">Hoş geldiniz</p>
+        <h1 className="text-2xl font-bold">{myRestaurant.name}</h1>
+        <p className="text-orange-100 text-sm mt-1">
+          📍 {myRestaurant.address}
+        </p>
+        <p className="text-orange-100 text-sm">
+          📞 {myRestaurant.phone}
+        </p>
+      </div>
+
       <div>
-        <h1 className="text-2xl font-bold text-gray-800">Merhaba! 👋</h1>
         <p className="text-gray-400">
           {new Date().toLocaleDateString('tr-TR', {
             weekday: 'long', day: 'numeric', month: 'long'
           })}
         </p>
       </div>
+
       <div className="grid grid-cols-3 gap-4">
         <div className="bg-orange-50 rounded-2xl p-4">
           <p className="text-sm text-orange-600">Bugün</p>
-          <p className="text-3xl font-bold text-orange-700">{todayOrders.length}</p>
+          <p className="text-3xl font-bold text-orange-700">
+            {todayOrders.length}
+          </p>
           <p className="text-xs text-orange-500">sipariş</p>
         </div>
         <div className="bg-blue-50 rounded-2xl p-4">
           <p className="text-sm text-blue-600">Aktif</p>
-          <p className="text-3xl font-bold text-blue-700">{activeOrders.length}</p>
+          <p className="text-3xl font-bold text-blue-700">
+            {activeOrders.length}
+          </p>
           <p className="text-xs text-blue-500">kurye yolda</p>
         </div>
         <div className="bg-green-50 rounded-2xl p-4">
           <p className="text-sm text-green-600">Teslim</p>
-          <p className="text-3xl font-bold text-green-700">{deliveredToday.length}</p>
+          <p className="text-3xl font-bold text-green-700">
+            {deliveredToday.length}
+          </p>
           <p className="text-xs text-green-500">bugün</p>
         </div>
       </div>
+
       <button
         onClick={() => navigate('/new-order')}
-        className="w-full bg-orange-500 hover:bg-orange-600 text-white 
-          font-semibold py-4 rounded-2xl transition-colors flex items-center 
-          justify-center gap-2 text-lg"
+        className="w-full bg-orange-500 hover:bg-orange-600
+          text-white font-semibold py-4 rounded-2xl
+          transition-colors flex items-center justify-center
+          gap-2 text-lg"
       >
         <span>+</span>
         <span>Yeni Sipariş Oluştur</span>
       </button>
+
       <div>
-        <h2 className="text-lg font-semibold text-gray-700 mb-3">Aktif Siparişler</h2>
+        <h2 className="text-lg font-semibold text-gray-700 mb-3">
+          Aktif Siparişler
+        </h2>
         <div className="space-y-3">
           {activeOrders.slice(0, 5).map((order: any) => (
-            <div key={order.id} className="bg-white rounded-xl border p-4 flex justify-between">
+            <div key={order.id}
+              className="bg-white rounded-xl border p-4 flex justify-between">
               <div>
-                <p className="font-semibold text-gray-800">#{order.orderNumber}</p>
-                <p className="text-sm text-gray-500">{order.customerName}</p>
+                <p className="font-semibold text-gray-800">
+                  #{order.orderNumber}
+                </p>
+                <p className="text-sm text-gray-500">
+                  {order.customerName}
+                </p>
               </div>
               <span className="text-orange-500 text-sm font-medium">
                 {order.status === 'assigned' ? '📦 Atandı' : '🛵 Yolda'}
@@ -80,7 +142,9 @@ const Dashboard = () => {
             </div>
           ))}
           {activeOrders.length === 0 && (
-            <p className="text-gray-400 text-sm text-center py-4">Aktif sipariş yok</p>
+            <p className="text-gray-400 text-sm text-center py-4">
+              Aktif sipariş yok
+            </p>
           )}
         </div>
       </div>
