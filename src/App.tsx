@@ -4,6 +4,7 @@ import Login from './pages/Login/Login';
 import Dashboard from './pages/Dashboard/Dashboard';
 import Orders from './pages/Orders/Orders';
 import NewOrder from './pages/NewOrder/NewOrder';
+import Settings from './pages/Settings/Settings';
 
 const queryClient = new QueryClient();
 const isAuthenticated = () => !!localStorage.getItem('token');
@@ -37,6 +38,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             { path: '/dashboard', icon: '🏠', label: 'Ana Sayfa' },
             { path: '/new-order', icon: '➕', label: 'Sipariş' },
             { path: '/orders', icon: '📋', label: 'Siparişler' },
+            { path: '/settings', icon: '⚙️', label: 'Ayarlar' },
           ].map(item => (
             <Link key={item.path} to={item.path}
               className="flex-1 py-3 flex flex-col items-center gap-1 text-gray-500 hover:text-orange-500 transition-colors">
@@ -60,6 +62,7 @@ function App() {
           <Route path="/dashboard" element={<PrivateRoute><Layout><Dashboard /></Layout></PrivateRoute>}/>
           <Route path="/new-order" element={<PrivateRoute><Layout><NewOrder /></Layout></PrivateRoute>}/>
           <Route path="/orders" element={<PrivateRoute><Layout><Orders /></Layout></PrivateRoute>}/>
+          <Route path="/settings" element={<PrivateRoute><Layout><Settings /></Layout></PrivateRoute>}/>
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>
