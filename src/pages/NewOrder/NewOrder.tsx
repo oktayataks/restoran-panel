@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../../services/api';
-import { getCustomers, saveCustomer } from '../../hooks/useCustomers';
-import type { Customer } from '../../hooks/useCustomers';
+import { saveCustomer } from '../../hooks/useCustomers';
 
 const NewOrder = () => {
   const navigate = useNavigate();
@@ -14,6 +13,7 @@ const NewOrder = () => {
   }> | null;
 
   const [loading, setLoading] = useState(false);
+  const [foundCustomer, setFoundCustomer] = useState<any>(null);
   const [form, setForm] = useState({
     customerName: prefill?.customerName || '',
     customerPhone: prefill?.customerPhone || '',
@@ -25,28 +25,33 @@ const NewOrder = () => {
     source: 'manual',
   });
 
-  const [phoneSuggestions, setPhoneSuggestions] = useState<Customer[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-
+  // Telefon değişince API'den müşteri ara (500ms debounce)
   useEffect(() => {
-    if (form.customerPhone.length >= 3) {
-      const all = getCustomers();
-      const matches = all.filter(c => c.phone.includes(form.customerPhone));
-      setPhoneSuggestions(matches.slice(0, 5));
-      setShowSuggestions(matches.length > 0);
-    } else {
-      setShowSuggestions(false);
+    if (form.customerPhone.length < 4) {
+      setFoundCustomer(null);
+      return;
     }
+    const timer = setTimeout(async () => {
+      try {
+        const res = await api.get(
+          `/customers/phone/${encodeURIComponent(form.customerPhone)}`
+        );
+        setFoundCustomer(res.data || null);
+      } catch {
+        setFoundCustomer(null);
+      }
+    }, 500);
+    return () => clearTimeout(timer);
   }, [form.customerPhone]);
 
-  const selectCustomer = (c: Customer) => {
-    setForm(p => ({
-      ...p,
-      customerName: c.name,
-      customerPhone: c.phone,
-      deliveryAddress: c.address,
+  const fillFromCustomer = (customer: any) => {
+    setForm(prev => ({
+      ...prev,
+      customerName: customer.name,
+      deliveryAddress: customer.address,
+      notes: customer.notes || prev.notes,
     }));
-    setShowSuggestions(false);
+    setFoundCustomer(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -76,6 +81,7 @@ const NewOrder = () => {
         restaurantId: myRestaurant.id,
       });
 
+      // Müşteriyi localStorage'a da yedekle
       saveCustomer({
         name: form.customerName,
         phone: form.customerPhone,
@@ -128,8 +134,8 @@ const NewOrder = () => {
             </div>
           </div>
 
-          {/* Telefon (autocomplete) */}
-          <div className="relative">
+          {/* Telefon + müşteri arama */}
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Müşteri Telefon *
             </label>
@@ -142,20 +148,30 @@ const NewOrder = () => {
               className="w-full border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-400"
               placeholder="05XX XXX XX XX"
             />
-            {showSuggestions && (
-              <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
-                {phoneSuggestions.map(c => (
+            {foundCustomer && (
+              <div className="bg-green-50 border border-green-200 rounded-xl p-3 mt-2">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-semibold text-green-800">
+                      ✅ Eski müşteri bulundu
+                    </p>
+                    <p className="text-sm text-green-700">
+                      {foundCustomer.name}
+                      {foundCustomer.orderCount > 0 && (
+                        <span className="text-green-500 ml-1">
+                          · {foundCustomer.orderCount} sipariş
+                        </span>
+                      )}
+                    </p>
+                  </div>
                   <button
-                    key={c.id}
                     type="button"
-                    onClick={() => selectCustomer(c)}
-                    className="w-full px-4 py-3 text-left hover:bg-orange-50 transition-colors border-b last:border-0"
+                    onClick={() => fillFromCustomer(foundCustomer)}
+                    className="bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors"
                   >
-                    <p className="font-semibold text-gray-800 text-sm">{c.name}</p>
-                    <p className="text-xs text-gray-500">{c.phone} · {c.orderCount} sipariş</p>
-                    <p className="text-xs text-gray-400 truncate">{c.address}</p>
+                    Otomatik Doldur
                   </button>
-                ))}
+                </div>
               </div>
             )}
           </div>
