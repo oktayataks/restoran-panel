@@ -54,6 +54,25 @@ const NewOrder = () => {
     setFoundCustomer(null);
   };
 
+  const geocodeAddress = async (address: string) => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&countrycodes=tr&limit=1`,
+        { headers: { 'User-Agent': 'TabyApp/1.0' } }
+      );
+      const data = await response.json();
+      if (data && data.length > 0) {
+        return {
+          lat: parseFloat(data[0].lat),
+          lng: parseFloat(data[0].lon),
+        };
+      }
+    } catch (e) {
+      console.error('Geocoding error:', e);
+    }
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -71,6 +90,8 @@ const NewOrder = () => {
         return;
       }
 
+      const coords = await geocodeAddress(form.deliveryAddress);
+
       await api.post('/orders', {
         customerName: form.customerName,
         customerPhone: form.customerPhone,
@@ -79,9 +100,13 @@ const NewOrder = () => {
         deliveryFee: parseFloat(form.deliveryFee || '0'),
         notes: form.notes ? `[${form.source}] ${form.notes}` : `[${form.source}]`,
         restaurantId: myRestaurant.id,
+        source: form.source,
+        ...(coords && {
+          deliveryLatitude: coords.lat,
+          deliveryLongitude: coords.lng,
+        }),
       });
 
-      // Müşteriyi localStorage'a da yedekle
       saveCustomer({
         name: form.customerName,
         phone: form.customerPhone,
@@ -275,7 +300,7 @@ const NewOrder = () => {
               disabled={loading}
               className="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 rounded-xl transition-colors disabled:opacity-50"
             >
-              {loading ? 'Kaydediliyor...' : '✅ Sipariş Oluştur'}
+              {loading ? 'Koordinat alınıyor...' : '✅ Sipariş Oluştur'}
             </button>
           </div>
         </form>
